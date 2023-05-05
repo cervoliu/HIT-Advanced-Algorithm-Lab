@@ -11,8 +11,9 @@ int main(int argc, char **argv)
     {
         int type = Random(0, 2);
         if(type == 1) type = 2;
-        int x = Random(1, 1000000);
+        int x = Random(1, 500000);
         printf("%d %d\n", type, x);
     }
+    fclose(stdout);
     return 0;
 }
