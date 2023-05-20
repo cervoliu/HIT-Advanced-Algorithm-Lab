@@ -1,4 +1,7 @@
+.gitignore
 .vscode
 input/
 output/
 data/
+lab5/TPC-H V3.0.1
+*.pdf
