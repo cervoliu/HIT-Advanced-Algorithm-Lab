@@ -16,9 +16,9 @@ lsh.o : lsh.cpp
 mix.o : mix.cpp
 	g++ mix.cpp -c -o mix.o
 
-file=data/mydata.txt
 
 .PHONY: clean
 clean:
-	@rm -rf *.o
-	@rm a
+	@rm -f *.o
+	@rm -f a
+	@rm -f ./data/*.ans
