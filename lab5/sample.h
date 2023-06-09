@@ -3,7 +3,7 @@
 #define LL long long
 #include "testlib.h"
 #include "test.h"
-#include "tuples.h"
+#include "tuple.h"
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -23,10 +23,10 @@ private:
         vector<int> ret{};
         for (int i = 0; i < n; ++i)
         {
-            if (!data.w[i][now].preSum.size() || !Accept(data.w[i][now].val, *(data.w[i][now].preSum.end() - 1)))
+            if (!data.t[i][now].preSum.size() || !Accept(data.t[i][now].W, *(data.t[i][now].preSum.end() - 1)))
                 return ret;
-            double rd = rnd.next(*(data.w[i][now].preSum.end() - 1));
-            now = data.w[i][now].nxt[upper_bound(data.w[i][now].preSum.begin(), data.w[i][now].preSum.end(), rd) - data.w[i][now].preSum.begin()];
+            double rd = rnd.next(*(data.t[i][now].preSum.end() - 1));
+            now = data.t[i][now].nxt[upper_bound(data.t[i][now].preSum.begin(), data.t[i][now].preSum.end(), rd) - data.t[i][now].preSum.begin()];
             ret.push_back(now);
         }
         return ret;
@@ -52,7 +52,7 @@ public:
     {
 
         for (int i = 0; i < n; ++i)
-            for (auto &x : data.w[i])
+            for (auto &x : data.t[i])
                 x.preSum.clear();
 
         cerr << "Getting weight now...\n";
@@ -62,23 +62,23 @@ public:
         cerr << "Getting weight over with time cost " << 1.0 * (time_2 - time_1) / CLOCKS_PER_SEC << "s " << endl;
 
         for (int i = 0; i < n; ++i)
-            for (auto &x : data.w[i])
+            for (auto &x : data.t[i])
             {
                 double sum = 0;
                 for (auto j : x.nxt)
                 {
-                    auto y = data.w[i + 1][j];
-                    sum += y.val;
+                    auto y = data.t[i + 1][j];
+                    sum += y.W;
                     x.preSum.push_back(sum);
                 }
             }
 
-        // cerr << data.w[0][0].val << " " << *(data.w[0][0].preSum.end()-2) << "\n";
+        // cerr << data.t[0][0].W << " " << *(data.t[0][0].preSum.end()-2) << "\n";
         LL tot = 1;
         if (o == 1)
         {
-            for (auto x : data.w)
-                tot *= data.w.size();
+            for (auto x : data.t)
+                tot *= data.t.size();
             tot *= 1000000;
         }
         else
@@ -94,11 +94,11 @@ public:
             tt.insert(sam);
         }
         cerr << "\n"
-             << data.w[0][0].val << " " << times << '\n';
+             << "Estimated join size:" << data.t[0][0].W << ",  sampling times: " << times << '\n';
         time_2 = clock();
         cerr << "\nSampling over with time cost each time " << 1.0 * (time_2 - time_1) / CLOCKS_PER_SEC << "s " << endl;
 
-        // cerr << data.w[0][0].val << " " << tt.pt();
+        // cerr << data.t[0][0].W << " " << tt.pt();
     }
 };
 
@@ -108,17 +108,17 @@ class ExactWeight : public sampling
 private:
     void getW(database &data, int n)
     {
-        for (auto &x : data.w[n])
-            x.val = 1.0;
+        for (auto &x : data.t[n])
+            x.W = 1.0;
         for (int i = n - 1; i >= 0; --i)
         {
-            for (auto &x : data.w[i])
+            for (auto &x : data.t[i])
             {
-                x.val = 0;
+                x.W = 0;
                 for (auto j : x.nxt)
                 {
-                    auto y = data.w[i + 1][j];
-                    x.val += y.val;
+                    auto y = data.t[i + 1][j];
+                    x.W += y.W;
                 }
             }
         }
@@ -132,16 +132,16 @@ private:
     void getW(database &data, int n)
     {
         times = 0;
-        for (auto &x : data.w[n])
-            x.val = 1.0;
+        for (auto &x : data.t[n])
+            x.W = 1.0;
         for (int i = n - 1; i >= 0; --i)
         {
             double mx = 0;
-            for (auto x : data.w[i])
+            for (auto x : data.t[i])
                 mx = max(mx, 1.0 * x.nxt.size());
-            mx *= data.w[i + 1][0].val;
-            for (auto &x : data.w[i])
-                x.val = mx;
+            mx *= data.t[i + 1][0].W;
+            for (auto &x : data.t[i])
+                x.W = mx;
         }
     }
 };
@@ -159,45 +159,44 @@ private:
         vector<int> walk{0};
         for (int i = 0; i < n; ++i)
         {
-            if (data.w[i][now].nxt.empty())
+            if (data.t[i][now].nxt.empty())
                 return false;
-            int rd = rnd.next(data.w[i][now].nxt.size());
-            now = data.w[i][now].nxt[rd];
+            int rd = rnd.next(data.t[i][now].nxt.size());
+            now = data.t[i][now].nxt[rd];
             walk.push_back(now);
         }
-        for (int i = n - 1; i >= 0; --i)
+        for(int i = n - 1; i >= 0; --i)
         {
-            auto &x = data.w[i][walk[i]];
-            x.walkTimes++;
-            x.val = ((x.walkTimes - 1) * x.val + data.w[i + 1][walk[i + 1]].val * x.nxt.size()) / x.walkTimes;
+            auto &x = data.t[i][walk[i]];
+            x.walkCnt++;
+            x.W = ((x.walkCnt - 1) * x.W + data.t[i + 1][walk[i + 1]].W * x.nxt.size()) / x.walkCnt;
         }
         return true;
     }
 
-private:
     void getW(database &data, int n)
     {
         times = 0;
-        for (auto &x : data.w[n])
-            x.val = 1;
+        for (auto &x : data.t[n])
+            x.W = 1;
         int m = 0;
-        for (auto x : data.w)
+        for (auto x : data.t)
             m += x.size();
         randomWalkTimes = m / n * 100;
         // cerr << randomWalkTimes << "\n";
         for (int i = 1; i <= randomWalkTimes; ++i)
-            while (!randomWalk(data, n));
+            while(!randomWalk(data, n));
         for (int i = n - 1; i; --i)
         {
-            for (auto &x : data.w[i])
+            for (auto &x : data.t[i])
             {
-                if (x.walkTimes >= theta)
+                if (x.walkCnt >= theta)
                     continue;
-                x.val = 0;
+                x.W = 0;
                 for (auto j : x.nxt)
                 {
-                    auto y = data.w[i + 1][j];
-                    x.val += y.val;
+                    auto y = data.t[i + 1][j];
+                    x.W += y.W;
                 }
             }
         }

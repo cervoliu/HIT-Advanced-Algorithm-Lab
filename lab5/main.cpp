@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     int o = opt<int>("o");
     cerr << "Initializing...\n";
     Data.init(n);
-    test tt(Data.w);
+    test tt(Data.t);
 
     cerr << "\n\n";
     sampling *EW = new ExactWeight();

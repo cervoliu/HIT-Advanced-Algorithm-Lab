@@ -1,6 +1,6 @@
 #ifndef _TEST_H_
 #define _TEST_H_
-#include "tuples.h"
+#include "tuple.h"
 #include <bits/stdc++.h>
 #define LL long long
 using namespace std;
@@ -12,7 +12,7 @@ class test
 private:
     vector<int> ans;
     bool flag;
-    vector<vector<tuples>> w;
+    vector<vector<Tuple>> t;
     map<vector<int>, int> cnt;
 
     void dfs(int now, int c, int n) //clear cnt
@@ -24,10 +24,10 @@ private:
             // cerr << endl;
             return;
         }
-        for (int i = 0; i < w[now + 1].size(); ++i)
+        for (int i = 0; i < t[now + 1].size(); ++i)
         {
-            auto x = w[now + 1][i];
-            if (x.pk != w[now][c].fk)
+            auto x = t[now + 1][i];
+            if (x.leftkey != t[now][c].rightkey)
                 continue;
             ans.push_back(x.id);
             dfs(now + 1, i, n);
@@ -41,11 +41,11 @@ public:
         return cnt.size();
     }
 
-    test(vector<vector<tuples>> &db)
+    test(vector<vector<Tuple>> &db)
     {
         cnt.clear();
         ans.clear();
-        w.clear();
+        t.clear();
         flag = false;
         int tot = 0;
         for (auto x : db)
@@ -54,8 +54,8 @@ public:
             flag = true;
         else
             return;
-        w = db;
-        int n = w.size();
+        t = db;
+        int n = t.size();
         dfs(0, 0, n);
     }
 

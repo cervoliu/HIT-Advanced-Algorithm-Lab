@@ -57,6 +57,6 @@ int main(int argc, char **argv)
     puts("------------------");
     printf("n = %d, m = %d\n", n, m);
     printf("E[val(MST)] = %.10lf\n", sum / m);
-    printf("runtime = %.3lf sec\n", 1.0 * (clock_en - clock_st) / CLOCKS_PER_SEC);
+    printf("runtime per sample = %.3lf ms\n", 1000. * (clock_en - clock_st) / CLOCKS_PER_SEC / m);
     return 0;
 }
