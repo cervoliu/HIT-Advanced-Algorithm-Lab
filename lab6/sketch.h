@@ -1,6 +1,7 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <unordered_map>
 
 using namespace std;
 
@@ -40,6 +41,22 @@ public:
     virtual ~Sketch() {}
     virtual void insert(int x) = 0;
     virtual int query(int x) = 0;
+};
+
+class Naive_hash : public Sketch
+{
+    using Sketch::Sketch;
+public:
+    unordered_map<int, int> hash_map;
+    void insert(int x)
+    {
+        total++, max_x = max(max_x, x);
+        hash_map[x]++;
+    }
+    int query(int x)
+    {
+        return hash_map[x];
+    }
 };
 
 class CM_Sketch : public Sketch

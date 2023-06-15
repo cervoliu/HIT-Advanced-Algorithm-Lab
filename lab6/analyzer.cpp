@@ -20,7 +20,8 @@ int main(int argc, char **argv)
         return 1;
     }
     string sketch_type = argv[1];
-    if(sketch_type != "CM" && sketch_type != "CU" && sketch_type != "Count")
+    if(sketch_type != "CM" && sketch_type != "CU" 
+    && sketch_type != "Count" && sketch_type != "naive")
     {
         cerr << "Invalid sketch type: " << sketch_type << endl;
         return 1;
@@ -118,6 +119,10 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
         else if(sketch_type == "Count")
         {
             sketch = new Count_Sketch(1000, 5);
+        }
+        else if(sketch_type == "naive")
+        {
+            sketch = new Naive_hash(1000, 5);
         }
         sketches[src_ip] = sketch;
     }
