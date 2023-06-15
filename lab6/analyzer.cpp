@@ -9,37 +9,23 @@ using namespace std;
 
 void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *buffer);
 
-//unordered_map<string, Sketch*> sketches;
+unordered_map<string, void*> sketches;
 
 int main(int argc, char **argv)
 {
     // Check command-line arguments
-    if(argc < 3)
+    if(argc < 4)
     {
-        cerr << "Usage: " << argv[0] << " <sketch_type> <network_interface>" << endl;
+        cerr << "Usage: " << argv[0] << " <sketch_type> <network_interface> <#_of_package>" << endl;
         return 1;
     }
-    
     string sketch_type = argv[1];
-    Sketch* sketch = nullptr;
-
-    if(sketch_type == "CM")
-    {
-        sketch = new CM_Sketch(1000, 5); // create a Count-Min Sketch object
-    }
-    else if(sketch_type == "CU")
-    {
-        sketch = new CU_Sketch(1000, 5); // create a Count-Unique Sketch object
-    }
-    else if(sketch_type == "Count")
-    {
-        sketch = new Count_Sketch(1000, 5); // create a Count Sketch object
-    }
-    else
+    if(sketch_type != "CM" && sketch_type != "CU" && sketch_type != "Count")
     {
         cerr << "Invalid sketch type: " << sketch_type << endl;
         return 1;
     }
+    int num_package = atoi(argv[3]);
 
     // Open network interface for packet capture
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -50,51 +36,90 @@ int main(int argc, char **argv)
     }
 
     // Start packet capture loop
-    pcap_loop(handle, 1000, process_packet, (u_char *)sketch);
+    pcap_loop(handle, num_package, process_packet, (u_char *)argv[1]);
+    cerr << endl;
 
     // Close network interface
     pcap_close(handle);
 
-    for(int i = 0; i < 200; ++i)
-        printf("%d\n", sketch->query(i));
-
-    delete sketch;
+    freopen("output.txt", "w", stdout);
+    for(auto p : sketches)
+    {
+        Sketch* sketch = (Sketch*)p.second;
+        printf("ip = %s, max = %d, total = %d\n", p.first.c_str(), sketch->max_x, sketch->total);
+        for(int i = 1; i <= sketch->max_x; i++)
+        {
+            printf("%d ", sketch->query(i));
+        }
+        printf("\n");
+        delete sketch;
+    }
+    fclose(stdout);
     return 0;
 }
 
+int now = 0;
+
 void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *buffer)
 {
+    if(++now % 100 == 0)
+    {
+        cerr << now << " ";
+    }
     // Extract Sketch data structure from arguments
-    auto *sketch = (Sketch *)args;
+    string sketch_type = (char *)args;
 
     // Parse Ethernet header
     const u_char *ethernet_header = buffer;
     int ethernet_type = (ethernet_header[12] << 8) | ethernet_header[13];
-    if (ethernet_type != 0x0800) {
+    if (ethernet_type != 0x0800 && ethernet_type != 0x86DD) {
         return; // Not an IP packet
     }
 
     // Parse IP header
     const u_char *ip_header = buffer + 14;
-    int ip_length = (ip_header[0] & 0x0f) * 4;
-    const u_char *ip_payload = ip_header + ip_length;
-    int ip_protocol = ip_header[9];
-    if (ip_protocol != 6) {
-        return; // Not a TCP packet
-    }
-
-    // Parse TCP header
-    const u_char *tcp_header = ip_payload;
-    int tcp_length = ((tcp_header[12] >> 4) & 0x0f) * 4;
-    const u_char *tcp_payload = tcp_header + tcp_length;
+    int ip_version = (ip_header[0] >> 4) & 0x0f;
+    int ip_header_length = (ip_header[0] & 0x0f) * 4;
 
     // Extract source IP address and payload length
-    string src_ip = to_string(ip_header[12]) + "." + to_string(ip_header[13]) + "." + to_string(ip_header[14]) + "." + to_string(ip_header[15]);
-    int payload_length = header->len - (ip_length + tcp_length);
+    std::string src_ip;
+    int payload_length;
+    if (ip_version == 4) {
+        // IPv4 packet
+        src_ip = std::to_string(ip_header[12]) + "." + std::to_string(ip_header[13]) + "." + std::to_string(ip_header[14]) + "." + std::to_string(ip_header[15]);
+        payload_length = header->len - ip_header_length;
+    } else if (ip_version == 6) {
+        // IPv6 packet
+        src_ip = "";
+        for (int i = 8; i < 24; i += 2) {
+            src_ip += std::to_string((ip_header[i] << 8) | ip_header[i+1]) + ":";
+        }
+        src_ip.pop_back(); // remove last colon
+        payload_length = header->len - ip_header_length;
+    } else {
+        return; // Not an IP packet
+    }
 
-    cerr << src_ip << " " << payload_length << endl;
+    //cerr << src_ip << " " << payload_length << endl;
 
+    Sketch* sketch = nullptr;
+    if(sketches[src_ip] == nullptr)
+    {
+        if(sketch_type == "CM")
+        {
+            sketch = new CM_Sketch(1000, 5);
+        }
+        else if(sketch_type == "CU")
+        {
+            sketch = new CU_Sketch(1000, 5);
+        }
+        else if(sketch_type == "Count")
+        {
+            sketch = new Count_Sketch(1000, 5);
+        }
+        sketches[src_ip] = sketch;
+    }
+    sketch = (Sketch*)sketches[src_ip];
     // Update Sketch with payload length for source IP address
     sketch->insert(payload_length);
-    //printf("%d\n", sketch->query(payload_length));
 }

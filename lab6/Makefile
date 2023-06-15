@@ -9,4 +9,4 @@ analyzer: analyzer.cpp sketch.h
 
 .PHONY:
 clean:
-	rm -f analyzer
+	rm -f analyzer output.txt

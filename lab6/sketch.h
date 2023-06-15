@@ -28,6 +28,7 @@ protected:
         return (1LL * p.first * x % mo + p.second) % mo % n;
     }
 public:
+    int total, max_x; // the maximum value of x
     Sketch(int _n, int _m) : n(_n), m(_m)
     {
         tbl.resize(n);
@@ -37,7 +38,7 @@ public:
         }
     }
     virtual ~Sketch() {}
-    virtual void insert(int x) = 0; //pure virtual function, to be inherited
+    virtual void insert(int x) = 0;
     virtual int query(int x) = 0;
 };
 
@@ -47,6 +48,7 @@ class CM_Sketch : public Sketch
 public:
     void insert(int x)
     {
+        total++, max_x = max(max_x, x);
         for(auto p : h)
         {
             int pos = hash(x, p);
@@ -71,6 +73,7 @@ class CU_Sketch : public Sketch
 public:
     void insert(int x)
     {
+        total++, max_x = max(max_x, x);
         static vector<int> pos_vec;
         pos_vec.clear();
         int min_val = INF;
@@ -109,6 +112,7 @@ public:
     }
     void insert(int x)
     {
+        total++, max_x = max(max_x, x);
         for(auto p : h)
         {
             int sig, pos = hash(x, p, sig);
