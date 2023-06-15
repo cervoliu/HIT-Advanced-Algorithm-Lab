@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     // Check command-line arguments
     if(argc < 4)
     {
-        cerr << "Usage: " << argv[0] << " <sketch_type> <network_interface> <#_of_package>" << endl;
+        cerr << "Usage: " << argv[0] << " <sketch_type> <network_interface> <#_of_packet>" << endl;
         return 1;
     }
     string sketch_type = argv[1];
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         cerr << "Invalid sketch type: " << sketch_type << endl;
         return 1;
     }
-    int num_package = atoi(argv[3]);
+    int num_packet = atoi(argv[3]);
 
     // Open network interface for packet capture
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     }
 
     // Start packet capture loop
-    pcap_loop(handle, num_package, process_packet, (u_char *)argv[1]);
+    pcap_loop(handle, num_packet, process_packet, (u_char *)argv[1]);
     cerr << endl;
 
     // Close network interface

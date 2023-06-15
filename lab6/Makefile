@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -g -Wall -Wextra -O2
 LDFLAGS = -lpcap
 
 all: analyzer
