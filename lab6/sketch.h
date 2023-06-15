@@ -73,7 +73,7 @@ public:
     {
         static vector<int> pos_vec;
         pos_vec.clear();
-        int min_val = 0;
+        int min_val = INF;
         for(auto p : h)
         {
             int pos = hash(x, p);

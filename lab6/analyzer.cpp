@@ -9,6 +9,8 @@ using namespace std;
 
 void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *buffer);
 
+//unordered_map<string, Sketch*> sketches;
+
 int main(int argc, char **argv)
 {
     // Check command-line arguments
@@ -89,6 +91,8 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
     // Extract source IP address and payload length
     string src_ip = to_string(ip_header[12]) + "." + to_string(ip_header[13]) + "." + to_string(ip_header[14]) + "." + to_string(ip_header[15]);
     int payload_length = header->len - (ip_length + tcp_length);
+
+    cerr << src_ip << " " << payload_length << endl;
 
     // Update Sketch with payload length for source IP address
     sketch->insert(payload_length);
