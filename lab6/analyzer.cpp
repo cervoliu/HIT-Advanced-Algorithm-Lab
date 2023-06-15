@@ -92,7 +92,9 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
         // IPv6 packet
         src_ip = "";
         for (int i = 8; i < 24; i += 2) {
-            src_ip += std::to_string((ip_header[i] << 8) | ip_header[i+1]) + ":";
+            char hex[5];
+            sprintf(hex, "%02x", (ip_header[i] << 8) | ip_header[i+1]);
+            src_ip += std::string(hex) + ":";
         }
         src_ip.pop_back(); // remove last colon
         payload_length = header->len - ip_header_length;
