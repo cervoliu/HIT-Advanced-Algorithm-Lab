@@ -12,29 +12,51 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
 int main(int argc, char **argv)
 {
     // Check command-line arguments
-    if (argc < 2) {
-        cerr << "Usage: " << argv[0] << " <interface>" << endl;
+    if(argc < 3)
+    {
+        cerr << "Usage: " << argv[0] << " <sketch_type> <network_interface>" << endl;
+        return 1;
+    }
+    
+    string sketch_type = argv[1];
+    Sketch* sketch = nullptr;
+
+    if(sketch_type == "CM")
+    {
+        sketch = new CM_Sketch(1000, 5); // create a Count-Min Sketch object
+    }
+    else if(sketch_type == "CU")
+    {
+        sketch = new CU_Sketch(1000, 5); // create a Count-Unique Sketch object
+    }
+    else if(sketch_type == "Count")
+    {
+        sketch = new Count_Sketch(1000, 5); // create a Count Sketch object
+    }
+    else
+    {
+        cerr << "Invalid sketch type: " << sketch_type << endl;
         return 1;
     }
 
     // Open network interface for packet capture
     char errbuf[PCAP_ERRBUF_SIZE];
-    pcap_t *handle = pcap_open_live(argv[1], BUFSIZ, 1, 1000, errbuf);
+    pcap_t *handle = pcap_open_live(argv[2], BUFSIZ, 1, 1000, errbuf);
     if (handle == NULL) {
-        cerr << "Error: could not open network interface " << argv[1] << ": " << errbuf << endl;
+        cerr << "Error: could not open network interface " << argv[2] << ": " << errbuf << endl;
         return 1;
     }
-    // Initialize Sketch data structure
-    CM_Sketch sketch(1000000, 4);
 
     // Start packet capture loop
-    pcap_loop(handle, 1000, process_packet, (u_char *)&sketch);
+    pcap_loop(handle, 1000, process_packet, (u_char *)sketch);
 
     // Close network interface
     pcap_close(handle);
 
     for(int i = 0; i < 200; ++i)
-        printf("%d\n", sketch.query(i));
+        printf("%d\n", sketch->query(i));
+
+    delete sketch;
     return 0;
 }
 

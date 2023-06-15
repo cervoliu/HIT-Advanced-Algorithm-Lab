@@ -36,13 +36,14 @@ public:
             h.push_back(make_pair(random(1, mo - 1), random(0, mo - 1)));
         }
     }
+    virtual ~Sketch() {}
     virtual void insert(int x) = 0; //pure virtual function, to be inherited
     virtual int query(int x) = 0;
 };
 
 class CM_Sketch : public Sketch
 {
-    using Sketch::Sketch; // implicitly inherite constructer
+    using Sketch::Sketch; // implicitly inherit constructer
 public:
     void insert(int x)
     {
