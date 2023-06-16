@@ -20,7 +20,7 @@ int main(int argc, char **argv)
         return 1;
     }
     string sketch_type = argv[1];
-    if(sketch_type != "CM" && sketch_type != "CU" 
+    if(sketch_type != "CM" && sketch_type != "CU" && sketch_type != "CMM"
     && sketch_type != "Count" && sketch_type != "naive")
     {
         cerr << "Invalid sketch type: " << sketch_type << endl;
@@ -60,6 +60,8 @@ int main(int argc, char **argv)
 }
 
 int now = 0;
+
+Sketch* create_sketch(string sketch_type);
 
 void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *buffer)
 {
@@ -108,25 +110,34 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
     Sketch* sketch = nullptr;
     if(sketches[src_ip] == nullptr)
     {
-        if(sketch_type == "CM")
-        {
-            sketch = new CM_Sketch(1000, 5);
-        }
-        else if(sketch_type == "CU")
-        {
-            sketch = new CU_Sketch(1000, 5);
-        }
-        else if(sketch_type == "Count")
-        {
-            sketch = new Count_Sketch(1000, 5);
-        }
-        else if(sketch_type == "naive")
-        {
-            sketch = new Naive_hash;
-        }
-        sketches[src_ip] = sketch;
+        sketches[src_ip] = create_sketch(sketch_type);
     }
     sketch = (Sketch*)sketches[src_ip];
     // Update Sketch with payload length for source IP address
     sketch->insert(payload_length);
+}
+
+Sketch* create_sketch(string sketch_type)
+{
+    if(sketch_type == "CM")
+    {
+        return new CM_Sketch(1000, 5);
+    }
+    else if(sketch_type == "CU")
+    {
+        return new CU_Sketch(1000, 5);
+    }
+    else if(sketch_type == "Count")
+    {
+        return new Count_Sketch(1000, 5);
+    }
+    else if(sketch_type == "CMM")
+    {
+        return new CMM_Sketch(1000, 5);
+    }
+    else if(sketch_type == "naive")
+    {
+        return new Naive_hash;
+    }
+    return nullptr;
 }

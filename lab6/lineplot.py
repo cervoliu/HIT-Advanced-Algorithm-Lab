@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-file = open("Count.out", "r")
+file = open("CMM.out", "r")
 
 lines = file.readlines()
 
@@ -81,5 +81,5 @@ plt.ylabel('Packet size')
 
 #plt.legend(loc='upper right')
 plt.legend(loc='lower right')
-plt.title('Packet size distribution for different IP addresses')
+plt.title('Estimated Packet size distribution for different IP addresses')
 plt.show()

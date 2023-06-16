@@ -2,11 +2,12 @@
 
 `make analyzer` - compile the ip packet analyzer.
 
-`./analyzer [CM/CU/Count/naive] [network_interface] [number_of_packet]` - run analyzer, where
+`./analyzer [CM/CU/Count/CMM/naive] [network_interface] [number_of_packet]` - run analyzer, where
 
 - `CM` - Count-Min sketch
 - `CU` - Count-Unique sketch
 - `Count` - Count sketch
+- `CMM` - Count-Mean-Min sketch
 - `naive` - STL unordered_map (baseline)
 
 `number_of_packet` is the number of ethernet packets to be captured (note : only IP packets would be analyzed).

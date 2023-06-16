@@ -1,11 +1,8 @@
-#include <vector>
 #include <random>
 #include <algorithm>
 #include <unordered_map>
 
 using namespace std;
-
-typedef pair<int, int> PII;
 
 const int INF = 1e9;
 const int mo = 1e9 + 7; // must be a prime
@@ -20,25 +17,31 @@ int random(int l, int r) {
 class Sketch
 {
 protected:
-    int n; // the size of hash table
-    vector<int> tbl; // the hash table
-    int m; // the number of hash functions, such as h(x) = (px + q) mod mo mod n
-    vector<PII> h;
-    int hash(int x, PII p)
+    int n; // the number of buckets
+    int m; // the number of hash functions
+    int **tbl, *a, *b;
+    int hash(int x, int i)
     {
-        return (1LL * p.first * x % mo + p.second) % mo % n;
+        return (1LL * a[i] * x % mo + b[i]) % mo % n;
     }
 public:
-    int total, max_x; // the maximum value of x
+    int total = 0, max_x = 0;
     Sketch(int _n, int _m) : n(_n), m(_m)
     {
-        tbl.resize(n);
+        a = new int[m], b = new int[m];
+        tbl = new int*[m];
         for(int i = 0; i < m; ++i)
         {
-            h.push_back(make_pair(random(1, mo - 1), random(0, mo - 1)));
+            a[i] = random(1, mo - 1), b[i] = random(0, mo - 1);
+            tbl[i] = new int[n];
         }
     }
-    virtual ~Sketch() {}
+    virtual ~Sketch()
+    {
+        delete[] a, delete[] b;
+        for(int i = 0; i < m; ++i) delete[] tbl[i];
+        delete[] tbl;
+    }
     virtual void insert(int x) = 0;
     virtual int query(int x) = 0;
 };
@@ -58,7 +61,7 @@ public:
         return hash_map[x];
     }
 };
-
+// Count-Min Sketch
 class CM_Sketch : public Sketch
 {
     using Sketch::Sketch; // implicitly inherit constructer
@@ -66,24 +69,23 @@ public:
     void insert(int x)
     {
         total++, max_x = max(max_x, x);
-        for(auto p : h)
+        for(int i = 0; i < m; ++i)
         {
-            int pos = hash(x, p);
-            tbl[pos]++;
+            tbl[i][hash(x, i)]++;
         }
     }
     int query(int x)
     {
         int res = INF;
-        for(auto p : h)
+        for(int i = 0; i < m; ++i)
         {
-            int pos = hash(x, p);
-            res = min(res, tbl[pos]);
+            int pos = hash(x, i);
+            res = min(res, tbl[i][pos]);
         }
         return res;
     }
 };
-
+// Count-Unique Sketch
 class CU_Sketch : public Sketch
 {
     using Sketch::Sketch;
@@ -94,59 +96,86 @@ public:
         static vector<int> pos_vec;
         pos_vec.clear();
         int min_val = INF;
-        for(auto p : h)
+        for(int i = 0; i < m; ++i)
         {
-            int pos = hash(x, p);
+            int pos = hash(x, i);
             pos_vec.push_back(pos);
-            min_val = min(min_val, tbl[pos]);
+            min_val = min(min_val, tbl[i][pos]);
         }
-        for(auto pos : pos_vec)
+        for(int i = 0; i < m; ++i)
         {
-            if(tbl[pos] == min_val) tbl[pos]++;
+            int pos = pos_vec[i];
+            if(tbl[i][pos] == min_val) tbl[i][pos]++;
         }
     }
     int query(int x)
     {
         int res = INF;
-        for(auto p : h)
+        for(int i = 0; i < m; ++i)
         {
-            int pos = hash(x, p);
-            res = min(res, tbl[pos]);
+            int pos = hash(x, i);
+            res = min(res, tbl[i][pos]);
         }
         return res;
     }
 };
-
+// Count-Sketch
 class Count_Sketch : public Sketch
 {
     using Sketch::Sketch;
 public:
-    int hash(int x, PII p, int &sig)
+    int hash(int x, int i, int &sig)
     {
-        int val = (1LL * p.first * x % mo + p.second) % mo;
+        int val = (1LL * a[i] * x % mo + b[i]) % mo;
         sig = (val & 1) ? 1 : -1;
         return val % n;
     }
     void insert(int x)
     {
         total++, max_x = max(max_x, x);
-        for(auto p : h)
+        for(int i = 0; i < m; ++i)
         {
-            int sig, pos = hash(x, p, sig);
-            tbl[pos] += sig;
+            int sig, pos = hash(x, i, sig);
+            tbl[i][pos] += sig;
         }
     }
     int query(int x)
     {
-        static vector<int> cnt_vec;
-        cnt_vec.clear();
-        for(auto p : h)
+        static vector<int> e;
+        e.clear();
+        for(int i = 0; i < m; ++i)
         {
-            int sig, pos = hash(x, p, sig);
-            cnt_vec.push_back(sig * tbl[pos]);
+            int sig, pos = hash(x, i, sig);
+            e.push_back(tbl[i][pos] * sig);
         }
-        sort(cnt_vec.begin(), cnt_vec.end());
-        if(m & 1) return cnt_vec[m / 2 + 1];
-        else return (cnt_vec[m / 2] + cnt_vec[m / 2 + 1]) / 2;
+        nth_element(e.begin(), e.begin() + m / 2, e.end());
+        return e[m / 2];
+    }
+};
+// Count-Mean-Min Sketch
+class CMM_Sketch : public Sketch
+{
+    using Sketch::Sketch;
+public:
+    void insert(int x)
+    {
+        total++, max_x = max(max_x, x);
+        for(int i = 0; i < m; ++i)
+        {
+            tbl[i][hash(x, i)]++;
+        }
+    }
+    int query(int x)
+    {
+        static vector<int> e;
+        e.clear();
+        for(int i = 0; i < m; ++i)
+        {
+            int val = tbl[i][hash(x, i)];
+            int noise = (total - val) / (n - 1);
+            e.push_back(val - noise);
+        }
+        nth_element(e.begin(), e.begin() + m / 2, e.end());
+        return e[m / 2];
     }
 };
