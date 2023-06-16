@@ -76,5 +76,3 @@ $ sudo time -v ./analyzer Count wlp0s20f3 1000
         Page size (bytes): 4096
         Exit status: 0
 ```
-
-sudo time -v ./analyzer Count wlp0s20f3 100000 > Count.out & sudo time -v ./analyzer naive wlp0s20f3 100000 > naive.out & sudo time -v ./analyzer CM wlp0s20f3 100000 > CM.out & sudo time -v ./analyzer CU wlp0s20f3 100000 > CU.out &
