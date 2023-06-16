@@ -45,9 +45,9 @@ public:
 
 class Naive_hash : public Sketch
 {
-    using Sketch::Sketch;
 public:
     unordered_map<int, int> hash_map;
+    Naive_hash() : Sketch(0, 0) {}
     void insert(int x)
     {
         total++, max_x = max(max_x, x);

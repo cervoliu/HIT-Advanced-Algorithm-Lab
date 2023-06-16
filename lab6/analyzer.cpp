@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     // Close network interface
     pcap_close(handle);
 
-    freopen("output.txt", "w", stdout);
+    //freopen("output.txt", "w", stdout);
     for(auto p : sketches)
     {
         Sketch* sketch = (Sketch*)p.second;
@@ -122,7 +122,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
         }
         else if(sketch_type == "naive")
         {
-            sketch = new Naive_hash(1000, 5);
+            sketch = new Naive_hash;
         }
         sketches[src_ip] = sketch;
     }
